@@ -1,0 +1,127 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+// Necessary for Next auth
+model Account {
+    id                String  @id @default(cuid())
+    userId            String
+    type              String
+    provider          String
+    providerAccountId String
+    refresh_token     String?
+    access_token      String?
+    expires_at        Int?
+    token_type        String?
+    scope             String?
+    id_token          String?
+    session_state     String?
+    user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([provider, providerAccountId])
+}
+
+model Session {
+    id           String   @id @default(cuid())
+    sessionToken String   @unique
+    userId       String
+    expires      DateTime
+    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+    id            String    @id @default(cuid())
+    name          String?
+    email         String?   @unique
+    password      String
+    emailVerified DateTime?
+    image         String?
+    accounts      Account[]
+    sessions      Session[]
+}
+
+model VerificationToken {
+    identifier String
+    token      String   @unique
+    expires    DateTime
+
+    @@unique([identifier, token])
+}
+
+model Subscriptions {
+    id                    String                  @id @default(cuid())
+    name                  String
+    description           String?
+    payment_method        String?
+    type                  String?
+    member_state          Boolean?
+    created_at            DateTime                @default(now())
+    updated_at            DateTime?
+    member                Member[]
+    SubscriptionPrice     SubscriptionPrice[]
+    SubscriptionRecurring SubscriptionRecurring[]
+    SubscriptionOneTime   SubscriptionOneTime[]
+}
+
+model SubscriptionRecurring {
+    id                     String        @id @default(cuid())
+    subscription           Subscriptions @relation(fields: [subscription_id], references: [id], onDelete: Cascade)
+    subscription_id        String
+    payment_period         String?
+    payment_selectedperiod String?
+    payment_fpayment       String?
+    created_at             DateTime      @default(now())
+    updated_at             DateTime?
+}
+
+model SubscriptionOneTime {
+    id                 String        @id @default(cuid())
+    subscription       Subscriptions @relation(fields: [subscription_id], references: [id], onDelete: Cascade)
+    subscription_id    String
+    payment_expiredate String?
+    created_at         DateTime      @default(now())
+    updated_at         DateTime?
+}
+
+model SubscriptionPrice {
+    id              String        @id @default(cuid())
+    subscription    Subscriptions @relation(fields: [subscription_id], references: [id], onDelete: Cascade)
+    subscription_id String
+    currency        String
+    float           Float
+    formatted       String
+    value           String
+    created_at      DateTime      @default(now())
+    updated_at      DateTime?
+}
+
+model Member {
+    id                      String                    @id @default(cuid())
+    subscription            Subscriptions             @relation(fields: [subscription_id], references: [id], onDelete: Cascade)
+    subscription_id         String
+    name_member             String
+    email_member            String
+    MemberSubscriptionPrice MemberSubscriptionPrice[]
+    created_at              DateTime                  @default(now())
+    updated_at              DateTime?
+}
+
+model MemberSubscriptionPrice {
+    id         String    @id @default(cuid())
+    member     Member    @relation(fields: [member_id], references: [id], onDelete: Cascade)
+    member_id  String
+    currency   String
+    float      Float
+    formatted  String
+    value      String
+    created_at DateTime  @default(now())
+    updated_at DateTime?
+}
