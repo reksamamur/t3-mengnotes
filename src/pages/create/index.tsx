@@ -227,7 +227,7 @@ const Create: NextPage = () => {
           onSubmit={(event) => handleSubmit(event)}
           className="space-y-10 mb-10"
         >
-          <div className="">
+          <div>
             <label
               htmlFor="subcsription_currency"
               className="block text-base font-semibold text-zinc-900 mb-2"

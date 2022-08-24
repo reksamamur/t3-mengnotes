@@ -52,7 +52,9 @@ export const subscriptionsRouter = createRouter()
       /**Subscriptions One time */
       let subcsription_expiredate = parseForm.subcsription_expiredate;
 
-      let subcsription_member = Boolean(JSON.parse(parseForm.subcsription_member));
+      let subcsription_member = Boolean(
+        JSON.parse(parseForm.subcsription_member)
+      );
 
       /**Breakdown price object */
       let subscription_price_currency = parseForm.subscription_currency;
@@ -118,4 +120,44 @@ export const subscriptionsRouter = createRouter()
       member_form: z.string(),
     }),
     async resolve({ input }) {},
+  })
+  .query("check", {
+    input: z.object({
+      subscription_id: z.string(),
+    }),
+    async resolve({ input }) {
+      try {
+        const findExist = await prisma.subscriptions.count({
+          where: {
+            id: input.subscription_id,
+          },
+        });
+
+        if (findExist !== 0) {
+          const dataPrice = await prisma.subscriptionPrice.findFirst({
+            where: {
+              subscription_id: input.subscription_id,
+            },
+          });
+
+          return {
+            status: 200,
+            message: "success, find the data",
+            data: dataPrice,
+          };
+        }
+
+        return {
+          status: 404,
+          message: "cannot find the data",
+          data: null,
+        };
+      } catch (error) {
+        throw new trpc.TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "An unexpected error occurred, please try again later.",
+          cause: error,
+        });
+      }
+    },
   });
